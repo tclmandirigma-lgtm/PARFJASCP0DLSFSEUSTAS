@@ -6717,7 +6717,7 @@ local humanoidRootPart = Players.LocalPlayer.Character:FindFirstChild("HumanoidR
 local Workspace = game:GetService("Workspace")  
 local filename = "CleventHub v1.0.0.1 Settings.txt"
 local prefixfile = "CleventHub Prefix v1.0.0.1 Settings.txt"
-local update3 = "CleventNotification3.txt"
+local update4 = "CleventNotification4.txt"
 local whitefile = "Whitelist CleventHub v1.0.0.1 Settings.txt"
 local permafile = "Blacklist CleventHub v1.0.0.1 Settings.txt"
 local valuesfile = "CleventHub Values v1.0.0.1 Settings.txt"
@@ -8877,7 +8877,7 @@ FunctionTable.VariableFunctions = {
 								local handle = v:FindFirstChild("Handle")
 								if handle then
 									firetouchinterest(handle, target.HRP, 0)
-									firetouchinterest(handle, target.HRP, 1)
+									firetouchinterest(handle, target.HRP, 0)
 								end
 							end
 						end
@@ -10373,13 +10373,11 @@ FunctionTable.VariableFunctions = {
 		end
 		function setupESP(player)
 			if not player or player == Player then return end
-			local char = player.Character
-			if not char then return end
-			local head = char:FindFirstChild("Head")
-			if not head then return end
-			local humanoid = char:FindFirstChildOfClass("Humanoid")
-			if not humanoid then return end
-			destroyESP(player)
+			local char = player.Character or player.CharacterAdded:Wait()
+            local humanoid = char:WaitForChild("Humanoid")
+            local head = char:WaitForChild("Head")
+            if not humanoid or not head then return end
+            destroyESP(player)
 			local highlight = Instance.new("Highlight")
 			highlight.Adornee = char
 			highlight.FillColor = (player.TeamColor and player.TeamColor.Color) or Color3.fromRGB(255, 0, 0)
@@ -13364,7 +13362,7 @@ FunctionTable.VariableFunctions = {
                             {"negative", "gives infinite health to a player"},
                             {"changeprefix", "changes the command bar prefix"},
 							{"hidecf", "hides change frame (NOTE: this is for those who doesn't want to change sides)"},
-                            {"hidespawnbtn", "hides Mainspawn and RandomSpawn buttons"},
+                            {"hidespawnbtn", "hides Mainspawn and RandomSpawn buttons (you can type hidebtn too)"},
 							{"rj", "rejoins a player to the same server"},
 							{"shop", "teleports you to a different server (ServerHop)"},
                             {"wl", "excludes a player from getting nuked (NukeServer)"},
@@ -13754,9 +13752,9 @@ FunctionTable.VariableFunctions = {
 								end
 							end
 						end)
-					elseif command == "rj" then
+					elseif command == "rj" or command == "rejoin" then
 						game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
-					elseif command == "shop" then
+					elseif command == "shop" or command == "serverhop" then
 						local TeleportService = game:GetService("TeleportService")
 						local PlaceId = game.PlaceId
 						local function ServerHop()
@@ -13773,7 +13771,7 @@ FunctionTable.VariableFunctions = {
 							end
 						end
 						ServerHop()
-                    elseif command == "hidespawnbtn" then
+                    elseif command == "hidespawnbtn" or command == "hidebtn" then
 						task.spawn(function()
 							while task.wait(0.1) do
 								game:GetService("Lighting"):WaitForChild("Blur").Size = 0
@@ -13964,6 +13962,14 @@ FunctionTable['HumDied'] = function()
 		local mainspawn = Player.PlayerGui:FindFirstChild("FirstScreenGui").MainSpawnBtn
 		local randomspawn = Player.PlayerGui:FindFirstChild("FirstScreenGui").RandomSpawnBtn
 		game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):WaitForChild("SpawnCharacterEvent"):FireServer("MainSpawn")
+        if VariableTable['CloneTools'] == true then
+			task.spawn(function()
+				task.wait(0.2)
+                for i = 1, VariableTable['CloneAmount'] do
+                    game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):WaitForChild("SpawnCharacterEvent"):FireServer("MainSpawn")
+                end
+            end)
+        end
 		game:GetService("Lighting"):WaitForChild("Blur").Size = 0
 		game:GetService("Lighting"):WaitForChild("Blur").Enabled = false
 		mainspawn.TextTransparency = 1
@@ -14094,25 +14100,14 @@ FunctionTable['LoadSettings'] = function()
     end
 end
 
-FunctionTable['LoadPrefix'] = function()
-    local httpservice = game:GetService("HttpService")
-    if (readfile and isfile and isfile(prefixfile)) then
-        local Settings = httpservice:JSONDecode(readfile(prefixfile))
-        if Settings.CommandPrefix then
-            commandPrefix = Settings.CommandPrefix
-            TextBox.PlaceholderText = "Enter command (" .. commandPrefix .. "tg, " .. commandPrefix .. "rtg, " .. commandPrefix .. "soft, " .. commandPrefix .. "unsoft, " .. commandPrefix .. "negative, " .. commandPrefix .. "wl, " .. commandPrefix .. "unwl, " .. commandPrefix .. "twl, " .. commandPrefix .. "untwl, " .. commandPrefix .. "except, " .. commandPrefix .. "unexcept, " .. commandPrefix .. "cmdlists, " .. commandPrefix .. "changeprefix, etc)..."
-        end
-    end
-end
-
 FunctionTable['UpdateNotification'] = function(forceNotify)
 	if writefile and isfile then
-		if forceNotify and isfile(update3) then
-			delfile(update3)
+		if forceNotify and isfile(update4) then
+			delfile(update4)
 		end
 
-		if not isfile(update3) then
-			writefile(update3, "shown")
+		if not isfile(update4) then
+			writefile(update4, "shown")
 
 			pcall(function()
 				game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -14181,18 +14176,16 @@ FunctionTable['UpdateNotification'] = function(forceNotify)
 			Text.Text = [[
             CleventHub has been updated!
 
-            🛠️New Commands:
-			cmdlists --> type this command to see all available commands (opens the gui Command lists)
+            🔥New Features:
+			You can now do auto clone by keeping both AutoRespawn and CloneTools On (NOTE: this is very useful especially if you're tired of retoggling CloneTools)
+         (TIPS: Also if you want an auto fighting mode without you clicking AHSword all the time just keep AutoEqpSwrd and AHSword turned On)
 
-			changeprefix --> changes the command bar prefix (NOTE: the only prefixes you can use are dot(.), slash(/), and semicolon(;) and no more prefixes needed if you open it manually )
+			   🎉New Features for Commands:
+         You can now type short commands(Note: some of them are already short so I'll think of another name for the rest that doesn't have short command)
 
-			hidecf --> hides change frame (NOTE: this is for those who doesn't want to change sides)
-			hidespawnbtn --> hides MainSpawn and RandomSpawn buttons (NOTE: this is useful if you're sick of clicking those buttons and blurred screen)
-
-			rejoin --> rejoins player to the same server
-			shop --> teleports you to a different server(ServerHop)
-
-			(Note: You can now use multiple names in one command. For example: tg playername1, playername2, playername3)
+			(Note: Me and Braxy will be updating the VoidTrain very soon and there's gonna be another version of CleventHub )
+         
+                                                     ⚔️CLEVENT ON TOP⚔️
             <------------------------------------------------------------------------------------------->
             
             ]]
@@ -14225,6 +14218,17 @@ FunctionTable['UpdateNotification'] = function(forceNotify)
 			end)
 		end
 	end
+end
+
+FunctionTable['LoadPrefix'] = function()
+    local httpservice = game:GetService("HttpService")
+    if (readfile and isfile and isfile(prefixfile)) then
+        local Settings = httpservice:JSONDecode(readfile(prefixfile))
+        if Settings.CommandPrefix then
+            commandPrefix = Settings.CommandPrefix
+            TextBox.PlaceholderText = "Enter command (" .. commandPrefix .. "tg, " .. commandPrefix .. "rtg, " .. commandPrefix .. "soft, " .. commandPrefix .. "unsoft, " .. commandPrefix .. "negative, " .. commandPrefix .. "wl, " .. commandPrefix .. "unwl, " .. commandPrefix .. "twl, " .. commandPrefix .. "untwl, " .. commandPrefix .. "except, " .. commandPrefix .. "unexcept, " .. commandPrefix .. "cmdlists, " .. commandPrefix .. "changeprefix, etc)..."
+        end
+    end
 end
 
 FunctionTable['LoadWhitelistSettings'] = function()
@@ -14927,8 +14931,8 @@ for i,v in ipairs(workspace.ALL:GetDescendants()) do
         task.wait(0.1)
 	end
 end
-------------------------------------
-getgenv().webhookexecUrl = "https://discord.com/api/webhooks/1431660949634289866/8ngeKLw2tJzp-dawoP0t-WgbTvkDbDI68tJPIWgHrZSzMSDmcUtjdnEMRGC_mZ5Or8eB"  -- Put your Webhook Url here
+-------------------------------------
+getgenv().webhookexecUrl = "https://discord.com/api/webhooks/1431660949634289866/8ngeKLw2tJzp-dawoP0t-WgbTvkDbDI68tJPIWgHrZSzMSDmcUtjdnEMRGC_mZ5Or8eB"
 getgenv().ExecLogSecret = true
 
 local ui = gethui()
