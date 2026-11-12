@@ -7148,7 +7148,7 @@ FunctionTable.VariableFunctions = {
 							end
 						end
 					end
-					task.wait()
+					task.wait(1)
 				end
 			end)
 		end
@@ -7674,12 +7674,12 @@ FunctionTable.VariableFunctions = {
 						for i,v in ipairs(Players.LocalPlayer.Character:GetChildren()) do
 							if v:IsA("Tool") and v.Name == "Sword" and v:FindFirstChild("HitEvent") then
 								v.HitEvent:FireServer()
-								task.wait(VariableTable['HitEventRate'])
+								game:GetService("RunService").PreRender:Wait()
 							end
 						end
 					end
 				end
-				task.wait(VariableTable['HitEventRate'])
+				game:GetService("RunService").PreRender:Wait()
 			end
 		elseif VariableTable['AHSword'] == false then
 			for i, v in ipairs(Players.LocalPlayer.Character:GetChildren()) do
