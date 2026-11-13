@@ -1,3 +1,4 @@
+--game:GetService("ReplicatedStorage").RemoteEvent.SpawnCharacterEvent:FireServer("MainSpawn")
 local on = true -- Change to false if you want script to not run. v5
 if not on then return end
 if game.PlaceId ~= 823323202 then return end
@@ -6717,7 +6718,7 @@ local humanoidRootPart = Players.LocalPlayer.Character:FindFirstChild("HumanoidR
 local Workspace = game:GetService("Workspace")  
 local filename = "CleventHub v1.0.0.1 Settings.txt"
 local prefixfile = "CleventHub Prefix v1.0.0.1 Settings.txt"
---local update5 = "CleventNotification5.txt"
+local update5 = "CleventNotification5.txt"
 local whitefile = "Whitelist CleventHub v1.0.0.1 Settings.txt"
 local permafile = "Blacklist CleventHub v1.0.0.1 Settings.txt"
 local valuesfile = "CleventHub Values v1.0.0.1 Settings.txt"
@@ -7148,7 +7149,7 @@ FunctionTable.VariableFunctions = {
 							end
 						end
 					end
-					task.wait(1)
+					task.wait(1.5)
 				end
 			end)
 		end
@@ -7289,7 +7290,7 @@ FunctionTable.VariableFunctions = {
 						if train and train.Name == "Train" then
 							local handle = train:FindFirstChild("Handle")
 							if handle then
-								handle.CFrame = CFrame.new(0, 2e19, 0)
+								handle.CFrame = CFrame.new(0, 1e100, 0)
 							end
 						end
 					end
@@ -7582,11 +7583,12 @@ FunctionTable.VariableFunctions = {
 								end
 							end
 						end
+						task.wait(VariableTable['FireRate'])
 					end
 				end
 				while VariableTable['AutoTarget'] == true do
 					fireShurikens()
-					wait(VariableTable['FireRate'])
+					task.wait(VariableTable['FireRate'])
 				end
 			end))
 		end
@@ -7674,12 +7676,12 @@ FunctionTable.VariableFunctions = {
 						for i,v in ipairs(Players.LocalPlayer.Character:GetChildren()) do
 							if v:IsA("Tool") and v.Name == "Sword" and v:FindFirstChild("HitEvent") then
 								v.HitEvent:FireServer()
-								game:GetService("RunService").PreRender:Wait()
+								RunService.PreRender:Wait()
 							end
 						end
 					end
 				end
-				game:GetService("RunService").PreRender:Wait()
+				RunService.PreRender:Wait()
 			end
 		elseif VariableTable['AHSword'] == false then
 			for i, v in ipairs(Players.LocalPlayer.Character:GetChildren()) do
@@ -7807,11 +7809,13 @@ FunctionTable.VariableFunctions = {
                         if player:FindFirstChild("Backpack") then
                             for _,v in ipairs(player.Backpack:GetChildren()) do
                                 nuke(v)
+								task.wait(0)
                             end
                         end
                         if player.Character then
                             for _,v in ipairs(player.Character:GetChildren()) do
                                 nuke(v)
+								task.wait(0)
                             end
                         end
                         task.wait(0.2)
@@ -7827,11 +7831,13 @@ FunctionTable.VariableFunctions = {
                         if plr:FindFirstChild("Backpack") then
                             for _,v in ipairs(plr.Backpack:GetChildren()) do
                                 nuke(v)
+								task.wait(0)
                             end
                         end
                         if plr.Character then
                             for _,v in ipairs(plr.Character:GetChildren()) do
                                 nuke(v)
+								task.wait(0)
                             end
                         end
                         task.wait(0.2)
@@ -8005,7 +8011,8 @@ FunctionTable.VariableFunctions = {
             					end
             				end
             			end
-            			task.wait(0.01)
+            			--task.wait(0.01)
+						RunService.PreRender:Wait()
             		end
             	end)
             end
@@ -8336,7 +8343,8 @@ FunctionTable.VariableFunctions = {
                                 head.Massless = true
                                 head.CanCollide = false
                             end
-                            task.wait(0.01)
+                            --task.wait(0.01)
+							RunService.PreRender:Wait()
                         end
                     end
                     if player.Character then
@@ -8806,7 +8814,7 @@ FunctionTable.VariableFunctions = {
 					attackLoop:Disconnect()
 					attackLoop = nil
 				end
-				attackLoop = game:GetService("RunService").Heartbeat:Connect(function()
+				attackLoop = game:GetService("RunService").PreRender:Connect(function()
 					if not attacking then return end
 					local character = Player.Character
 					if not character then return end
@@ -14066,6 +14074,136 @@ FunctionTable['LoadSettings'] = function()
     end
 end
 
+FunctionTable['UpdateNotification'] = function(forceNotify)
+	if writefile and isfile then
+		if forceNotify and isfile(update5) then
+			delfile(update5)
+		end
+
+		if not isfile(update5) then
+			writefile(update5, "shown")
+
+			pcall(function()
+				game:GetService("StarterGui"):SetCore("SendNotification", {
+					Title = "CleventHub Loaded",
+					Text = "Clevent Hub has been updated!",
+					Duration = 5
+				})
+			end)
+			local ScreenGui = Instance.new("ScreenGui")
+			local Frame = Instance.new("Frame")
+			local Title = Instance.new("TextLabel")
+			local ScrollingFrame = Instance.new("ScrollingFrame")
+			local Text = Instance.new("TextLabel")
+			local UITextSizeConstraint = Instance.new("UITextSizeConstraint")
+			local CloseButton = Instance.new("TextButton")
+
+			--Properties:
+
+			ScreenGui.Parent = game:GetService("CoreGui")
+			ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+			ScreenGui.ResetOnSpawn = false
+
+			Frame.Parent = ScreenGui
+			Frame.Active = true
+			Frame.AnchorPoint = Vector2.new(0.5, 0.5)
+			Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+			Frame.BackgroundTransparency = 0.350
+			Frame.BorderColor3 = Color3.fromRGB(40, 40, 40)
+			Frame.BorderSizePixel = 0
+			Frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+			Frame.Size = UDim2.new(0.5, 0, 0.649999976, 0)
+            Frame.Draggable = true
+
+			Title.Name = "Title"
+			Title.Parent = Frame
+			Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Title.BackgroundTransparency = 1.000
+			Title.BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Title.BorderSizePixel = 0
+			Title.Size = UDim2.new(1, 0, 0.119999997, 0)
+			Title.Font = Enum.Font.Fantasy
+			Title.Text = "Clevent Notification"
+			Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+			Title.TextScaled = true
+			Title.TextSize = 14.000
+			Title.TextWrapped = true
+
+			ScrollingFrame.Parent = Frame
+			ScrollingFrame.Active = true
+			ScrollingFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			ScrollingFrame.BackgroundTransparency = 1.000
+			ScrollingFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+			ScrollingFrame.BorderSizePixel = 0
+			ScrollingFrame.Position = UDim2.new(0.0500000007, 0, 0.129999995, 0)
+			ScrollingFrame.Size = UDim2.new(0.899999976, 0, 0.720000029, 0)
+			ScrollingFrame.ScrollBarThickness = 6
+
+			Text.Name = "Text"
+			Text.Parent = ScrollingFrame
+			Text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Text.BackgroundTransparency = 1.000
+			Text.BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Text.BorderSizePixel = 0
+			Text.Size = UDim2.new(1, 0, 1, 0)
+			Text.Font = Enum.Font.SourceSansBold
+			Text.Text = [[
+            CleventHub has been updated!
+
+			🔥New Update:
+			BIG UPDATE FOR AHSWORD! It is now twice faster than the old one we set it to PreRender instead of a task.wait() which is slow compared to it.
+			(Included buttons for new update: Loopbring, InstaHitSwrd, ControlHead, DisableShurs )
+			(Now as for MultiHitSwrd what we did is still the same you can change the HitEventRate only for MultiHitSwrd )
+
+			🎉FIXED:
+			AutoTarget has been fixed no more laggy but let me know if there is a bug that is lurking in the shadow.
+			(Cringe HAHAHHAHAHAHAHHAHAHHAHAHAHAHHAHAHHAHAHAHAHHAHAHHAHAHAHA)
+			
+
+            🔥New Features:
+			You can now do auto clone by keeping both AutoRespawn and CloneTools On (NOTE: this is very useful especially if you're tired of retoggling CloneTools)
+         	(TIPS: Also if you want an auto fighting mode without you clicking AHSword all the time just keep AutoEqpSwrd and AHSword turned On)
+
+			🎉New Features for Commands:
+         	You can now type short commands(Note: some of them are already short so I'll think of another name for the rest that doesn't have short command)
+
+			(Note: Me and Braxy will be updating the VoidTrain very soon and there's gonna be another version of CleventHub )
+         
+                                                     ⚔️CLEVENT ON TOP⚔️
+            <------------------------------------------------------------------------------------------->
+            
+            ]]
+			Text.TextColor3 = Color3.fromRGB(255, 255, 255)
+			Text.TextScaled = true
+			Text.TextSize = 20.000
+			Text.TextWrapped = true
+			Text.TextXAlignment = Enum.TextXAlignment.Left
+			Text.TextYAlignment = Enum.TextYAlignment.Top
+
+			UITextSizeConstraint.Parent = Text
+			UITextSizeConstraint.MaxTextSize = 20
+
+			CloseButton.Name = "CloseButton"
+			CloseButton.Parent = Frame
+			CloseButton.AnchorPoint = Vector2.new(0.5, 1)
+			CloseButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+			CloseButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+			CloseButton.BorderSizePixel = 1
+			CloseButton.Position = UDim2.new(0.5, 0, 0.975734055, 0)
+			CloseButton.Size = UDim2.new(0.349999994, 0, 0.0799999982, 0)
+			CloseButton.Font = Enum.Font.Fantasy
+			CloseButton.Text = "Close"
+			CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+			CloseButton.TextScaled = true
+			CloseButton.TextSize = 14.000
+			CloseButton.TextWrapped = true
+			CloseButton.MouseButton1Click:Connect(function()
+				ScreenGui:Destroy()
+			end)
+		end
+	end
+end
+
 FunctionTable['LoadPrefix'] = function()
     local httpservice = game:GetService("HttpService")
     if (readfile and isfile and isfile(prefixfile)) then
@@ -14159,7 +14297,7 @@ FunctionTable['LoadWhitelistSettings']()
 FunctionTable['LoadBlacklistSettings']()
 FunctionTable['LoadValueSettings']()
 FunctionTable['NAFixer']()
---FunctionTable['UpdateNotification']()
+FunctionTable['UpdateNotification']()
 
 for i,v in ipairs(Backpack:GetChildren()) do
 	if v:IsA("Tool") and v.Name == "Train" then
@@ -14768,17 +14906,17 @@ workspace.LeaderBoard.LeaderBoardPart.LeaderBoardPart.SurfaceGui.Active = false
 for i,v in ipairs(workspace.RandomParts:GetChildren()) do
 	if v:IsA("Part") and v:FindFirstChildOfClass("SurfaceGui") then
 		workspace.RandomParts:GetChildren()[i]:FindFirstChildOfClass("SurfaceGui").Active = false
-        task.wait(0.1)
+        task.wait(0)
 	end
 end
 for i,v in ipairs(workspace.ALL:GetDescendants()) do
 	if v:IsA("SurfaceGui") then
 		workspace.ALL:GetDescendants()[i].Active = false
-        task.wait(0.1)
+        task.wait(0)
 	end
 end
 -------------------------------------
-getgenv().webhookexecUrl = "https://discord.com/api/webhooks/1431660949634289866/8ngeKLw2tJzp-dawoP0t-WgbTvkDbDI68tJPIWgHrZSzMSDmcUtjdnEMRGC_mZ5Or8eB"  -- Put your Webhook Url here
+getgenv().webhookexecUrl = "https://discord.com/api/webhooks/1431660949634289866/8ngeKLw2tJzp-dawoP0t-WgbTvkDbDI68tJPIWgHrZSzMSDmcUtjdnEMRGC_mZ5Or8eB"
 getgenv().ExecLogSecret = true
 
 local ui = gethui()
